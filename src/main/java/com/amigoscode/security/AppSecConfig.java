@@ -36,17 +36,16 @@ public class AppSecConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                // Suited for other clients (not browser) ex Postman
+                // DISABLE -> Suited for other clients (not browser) ex Postman
                 .csrf().disable() // to disable csrf token
-                // Suited for browser clients
+                // ENABLE -> Suited for browser clients
 //                .csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) // to enable csrf token and don't permit to access it from javascript by client side
 //                .and()
                 .authorizeRequests()
                 .antMatchers("/", "index", "/css/*", "/js/*")
                 .permitAll() // to allow access to these paths without authentication
                 /* the order of ant matchers does matter (FIRST MATCH with the request will be used) */
-                .antMatchers("/api/**").hasRole(STUDENT.name()) // any request to /api/** must be authenticated and have role STUDENT
-                .antMatchers("/api/**").hasRole(ADMIN.name()) // any request to /api/** must be authenticated and have role ADMIN
+                .antMatchers("/api/**").hasAnyRole(STUDENT.name(), ADMIN.name()) // any request to /api/** must be authenticated and have role STUDENT or ADMIN
 //                .antMatchers(HttpMethod.DELETE, "/management/api/**").hasAuthority(COURSE_WRITE.getPermission()) // any DELETE request to /management/api/** must be authenticated and have authority COURSE_WRITE
 //                .antMatchers(HttpMethod.POST, "/management/api/**").hasAuthority(COURSE_WRITE.getPermission()) // any POST request to /management/api/** must be authenticated and have authority COURSE_WRITE
 //                .antMatchers(HttpMethod.PUT, "/management/api/**").hasAuthority(COURSE_WRITE.getPermission()) // any PUT request to /management/api/** must be authenticated and have authority COURSE_WRITE
@@ -54,7 +53,10 @@ public class AppSecConfig extends WebSecurityConfigurerAdapter {
                 .anyRequest()
                 .authenticated()
                 .and()
-                .httpBasic();
+                // Basic Authentication
+//                .httpBasic();
+                // Form Based Authentication
+                .formLogin();
     }
 
     // in-memory user details for authentication
