@@ -3,7 +3,6 @@ package com.amigoscode.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -13,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 import static com.amigoscode.security.AppUserPermission.*;
 import static com.amigoscode.security.AppUserRole.*;
@@ -36,7 +36,11 @@ public class AppSecConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                .csrf().disable()
+                // Suited for other clients (not browser) ex Postman
+                .csrf().disable() // to disable csrf token
+                // Suited for browser clients
+//                .csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) // to enable csrf token and don't permit to access it from javascript by client side
+//                .and()
                 .authorizeRequests()
                 .antMatchers("/", "index", "/css/*", "/js/*")
                 .permitAll() // to allow access to these paths without authentication
@@ -84,6 +88,5 @@ public class AppSecConfig extends WebSecurityConfigurerAdapter {
                 tomUser
         );
     }
-
 
 }
