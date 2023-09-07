@@ -56,7 +56,10 @@ public class AppSecConfig extends WebSecurityConfigurerAdapter {
                 // Basic Authentication
 //                .httpBasic();
                 // Form Based Authentication
-                .formLogin();
+                .formLogin()
+                .loginPage("/login").permitAll() // to allow access to /login without authentication
+                .defaultSuccessUrl("/", false); // redirect to / after login success if the user doesn't have any request before login
+//                .defaultSuccessUrl("/courses", true); // always redirect to /courses after login success
     }
 
     // in-memory user details for authentication
