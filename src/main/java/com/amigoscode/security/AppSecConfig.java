@@ -1,8 +1,11 @@
 package com.amigoscode.security;
 
+import com.amigoscode.auth.AppUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -25,11 +28,15 @@ import static com.amigoscode.security.AppUserRole.*;
 @EnableGlobalMethodSecurity(prePostEnabled = true) // to enable @PreAuthorize and @PostAuthorize
 public class AppSecConfig extends WebSecurityConfigurerAdapter {
     private final PasswordEncoder passwordEncoder;
+    private final AppUserService appUserService;
 
     @Autowired
-    public AppSecConfig(PasswordEncoder passwordEncoder) {
+    public AppSecConfig(PasswordEncoder passwordEncoder,
+                        AppUserService appUserService) {
         // inject passwordEncoder bean
         this.passwordEncoder = passwordEncoder;
+        // inject appUserService bean
+        this.appUserService = appUserService;
     }
 
     // Basic Authentication
@@ -90,36 +97,53 @@ public class AppSecConfig extends WebSecurityConfigurerAdapter {
                     .logoutSuccessUrl("/login");
     }
 
-    // in-memory user details for authentication
+//    // in-memory user details for authentication
+//    @Override
+//    @Bean
+//    protected UserDetailsService userDetailsService() {
+//        UserDetails annaSmithUser = User.builder()
+//                .username("annasmith")
+//                .password(passwordEncoder.encode("password")) // bcrypt password encoding
+////                .roles(STUDENT.name()) // ROLE_STUDENT (role-based authentication)
+//                .authorities(STUDENT.getGrantedAuthorities()) // permission-based authentication ( or authority-based authentication)
+//                .build();
+//
+//        UserDetails lindaUser = User.builder()
+//                .username("linda")
+//                .password(passwordEncoder.encode("password123")) // bcrypt password encoding
+////                .roles(ADMIN.name()) // ROLE_ADMIN (role-based authentication)
+//                .authorities(ADMIN.getGrantedAuthorities()) // permission-based authentication ( or authority-based authentication )
+//                .build();
+//
+//        UserDetails tomUser = User.builder()
+//                .username("tom")
+//                .password(passwordEncoder.encode("password123")) // bcrypt password encoding
+////                .roles(ADMINTRAINEE.name()) // ROLE_ADMINTRAINEE (role-based authentication)
+//                .authorities(ADMINTRAINEE.getGrantedAuthorities()) // permission-based authentication ( or authority-based authentication )
+//                .build();
+//
+//        return new InMemoryUserDetailsManager(
+//                annaSmithUser,
+//                lindaUser,
+//                tomUser
+//        );
+//    }
+
+    // Database Authentication
     @Override
-    @Bean
-    protected UserDetailsService userDetailsService() {
-        UserDetails annaSmithUser = User.builder()
-                .username("annasmith")
-                .password(passwordEncoder.encode("password")) // bcrypt password encoding
-//                .roles(STUDENT.name()) // ROLE_STUDENT (role-based authentication)
-                .authorities(STUDENT.getGrantedAuthorities()) // permission-based authentication ( or authority-based authentication)
-                .build();
-
-        UserDetails lindaUser = User.builder()
-                .username("linda")
-                .password(passwordEncoder.encode("password123")) // bcrypt password encoding
-//                .roles(ADMIN.name()) // ROLE_ADMIN (role-based authentication)
-                .authorities(ADMIN.getGrantedAuthorities()) // permission-based authentication ( or authority-based authentication )
-                .build();
-
-        UserDetails tomUser = User.builder()
-                .username("tom")
-                .password(passwordEncoder.encode("password123")) // bcrypt password encoding
-//                .roles(ADMINTRAINEE.name()) // ROLE_ADMINTRAINEE (role-based authentication)
-                .authorities(ADMINTRAINEE.getGrantedAuthorities()) // permission-based authentication ( or authority-based authentication )
-                .build();
-
-        return new InMemoryUserDetailsManager(
-                annaSmithUser,
-                lindaUser,
-                tomUser
-        );
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        // inject daoAuthenticationProvider bean
+        auth.authenticationProvider(daoAuthenticationProvider());
     }
 
+
+    @Bean
+    public DaoAuthenticationProvider daoAuthenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        // inject userDetailsService bean
+        provider.setUserDetailsService(appUserService);
+        // inject passwordEncoder bean
+        provider.setPasswordEncoder(passwordEncoder);
+        return provider;
+    }
 }
